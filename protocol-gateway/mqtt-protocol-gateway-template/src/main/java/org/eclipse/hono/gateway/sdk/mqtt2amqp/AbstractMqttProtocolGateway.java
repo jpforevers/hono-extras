@@ -29,7 +29,6 @@ import java.util.stream.Collectors;
 import javax.net.ssl.SSLPeerUnverifiedException;
 
 import org.apache.qpid.proton.message.Message;
-import org.eclipse.hono.auth.Device;
 import org.eclipse.hono.client.ClientErrorException;
 import org.eclipse.hono.client.ServiceInvocationException;
 import org.eclipse.hono.client.amqp.config.ClientConfigProperties;
@@ -141,7 +140,7 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
      * @param clientId The client id.
      * @return A future indicating the outcome of the operation.
      */
-    protected abstract Future<Device> authenticateDevice(String username, String password, String clientId);
+    protected abstract Future<DeviceInfo> authenticateDevice(String username, String password, String clientId);
 
     /**
      * Validates the topic filter that a device sent in its subscription message. Additional information is provided
@@ -282,7 +281,7 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
      * @see #getTrustAnchors(List)
      * @see #authenticateClientCertificate(X509Certificate)
      */
-    protected Future<Device> authenticateDeviceCertificate(final Certificate[] path) {
+    protected Future<DeviceInfo> authenticateDeviceCertificate(final Certificate[] path) {
 
         final List<X509Certificate> certificates = Arrays.stream(path)
                 .filter(cert -> cert instanceof X509Certificate)
@@ -340,7 +339,7 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
      * @see #authenticateDeviceCertificate(Certificate[])
      * @see #getTrustAnchors(List)
      */
-    protected Future<Device> authenticateClientCertificate(final X509Certificate deviceCertificate) {
+    protected Future<DeviceInfo> authenticateClientCertificate(final X509Certificate deviceCertificate) {
         return Future.failedFuture("Cannot establish device identity");
     }
 
@@ -366,7 +365,7 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
             log.debug("ignoring client's last will");
         }
 
-        final Future<Device> authAttempt = tryAuthenticationWithClientCertificate(endpoint)
+        final Future<DeviceInfo> authAttempt = tryAuthenticationWithClientCertificate(endpoint)
                 .recover(ex -> authenticateWithUsernameAndPassword(endpoint))
                 .compose(authenticateDevice -> (authenticateDevice == null)
                         ? Future.failedFuture("device authentication failed")
@@ -401,12 +400,12 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
                 });
     }
 
-    private Future<Device> tryAuthenticationWithClientCertificate(final MqttEndpoint endpoint) {
+    private Future<DeviceInfo> tryAuthenticationWithClientCertificate(final MqttEndpoint endpoint) {
         if (endpoint.isSsl()) {
             try {
                 final Certificate[] path = endpoint.sslSession().getPeerCertificates();
                 if (path != null && path.length > 0) {
-                    final Future<Device> authAttempt = authenticateDeviceCertificate(path);
+                    final Future<DeviceInfo> authAttempt = authenticateDeviceCertificate(path);
                     log.debug("authentication with client certificate: {}.",
                             authAttempt.succeeded() ? "succeeded" : "failed");
                     return authAttempt;
@@ -418,13 +417,13 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
         return Future.failedFuture(new ClientErrorException(HttpURLConnection.HTTP_UNAUTHORIZED));
     }
 
-    private Future<Device> authenticateWithUsernameAndPassword(final MqttEndpoint endpoint) {
+    private Future<DeviceInfo> authenticateWithUsernameAndPassword(final MqttEndpoint endpoint) {
         final MqttAuth auth = endpoint.auth();
         if (auth == null || auth.getUsername() == null || auth.getPassword() == null) {
             return Future.failedFuture(new ClientErrorException(HttpURLConnection.HTTP_UNAUTHORIZED,
                     "device did not provide credentials in CONNECT packet"));
         } else {
-            final Future<Device> authenticatedDevice = authenticateDevice(auth.getUsername(), auth.getPassword(),
+            final Future<DeviceInfo> authenticatedDevice = authenticateDevice(auth.getUsername(), auth.getPassword(),
                     endpoint.clientIdentifier());
             if (authenticatedDevice == null) {
                 return Future.failedFuture(new ClientErrorException(HttpURLConnection.HTTP_INTERNAL_ERROR));
@@ -462,7 +461,7 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
 
     }
 
-    private void registerHandlers(final MqttEndpoint endpoint, final Device authenticatedDevice) {
+    private void registerHandlers(final MqttEndpoint endpoint, final DeviceInfo authenticatedDevice) {
 
         endpoint.publishHandler(
                 message -> handlePublishedMessage(
@@ -478,7 +477,7 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
 
     private void cleanupConnections(final MqttEndpoint endpoint,
             final CommandSubscriptionsManager cmdSubscriptionsManager,
-            final Device authenticatedDevice) {
+            final DeviceInfo authenticatedDevice) {
 
         log.info("closing connection to device {}", authenticatedDevice.toString());
 
@@ -642,7 +641,7 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
      *            and handle PUBACKs.
      * @throws NullPointerException if any of the parameters is {@code null}.
      */
-    private void onSubscribe(final MqttEndpoint endpoint, final Device authenticatedDevice,
+    private void onSubscribe(final MqttEndpoint endpoint, final DeviceInfo authenticatedDevice,
             final MqttSubscribeMessage subscribeMsg, final CommandSubscriptionsManager cmdSubscriptionsManager) {
 
         Objects.requireNonNull(endpoint);
@@ -703,7 +702,7 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
      *            and handle PUBACKs.
      * @throws NullPointerException if any of the parameters is {@code null}.
      */
-    private void onUnsubscribe(final MqttEndpoint endpoint, final Device authenticatedDevice,
+    private void onUnsubscribe(final MqttEndpoint endpoint, final DeviceInfo authenticatedDevice,
             final MqttUnsubscribeMessage unsubscribeMsg, final CommandSubscriptionsManager cmdSubscriptionsManager) {
 
         Objects.requireNonNull(endpoint);
@@ -727,7 +726,7 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
     }
 
     private Future<CommandConsumer> createCommandConsumer(final MqttEndpoint endpoint,
-            final CommandSubscriptionsManager cmdSubscriptionsManager, final Device authenticatedDevice) {
+            final CommandSubscriptionsManager cmdSubscriptionsManager, final DeviceInfo authenticatedDevice) {
 
         return tenantConnectionManager.createDeviceSpecificCommandConsumer(
                 authenticatedDevice.getTenantId(),
@@ -736,7 +735,7 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
     }
 
     private void handleCommand(final MqttEndpoint endpoint, final Message message,
-            final CommandSubscriptionsManager cmdSubscriptionsManager, final Device authenticatedDevice) {
+            final CommandSubscriptionsManager cmdSubscriptionsManager, final DeviceInfo authenticatedDevice) {
 
         if (message.getReplyTo() != null) {
             log.debug("Received request/response command [subject: {}, correlationID: {}, messageID: {}, reply-to: {}]",
@@ -772,7 +771,7 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
     // Vert.x only calls this handler after it successfully published the message, otherwise it throws an exception
     // which causes the AMQP Command Consumer not to be settled (and the backend application to receive an error)
     private void afterCommandPublished(final Integer publishedMsgId, final Message message,
-            final Device authenticatedDevice, final CommandSubscription subscription,
+            final DeviceInfo authenticatedDevice, final CommandSubscription subscription,
             final CommandSubscriptionsManager cmdSubscriptionsManager) {
 
         if (MqttQoS.AT_LEAST_ONCE.equals(subscription.getQos())) {

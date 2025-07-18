@@ -17,7 +17,6 @@ import java.util.Objects;
 
 import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
 import org.apache.qpid.proton.message.Message;
-import org.eclipse.hono.auth.Device;
 import org.eclipse.hono.client.amqp.connection.AmqpUtils;
 
 import io.vertx.core.buffer.Buffer;
@@ -28,9 +27,9 @@ import io.vertx.core.buffer.Buffer;
 public class MqttCommandContext {
 
     private final Message message;
-    private final Device authenticatedDevice;
+    private final DeviceInfo authenticatedDevice;
 
-    private MqttCommandContext(final Message message, final Device authenticatedDevice) {
+    private MqttCommandContext(final Message message, final DeviceInfo authenticatedDevice) {
         this.message = message;
         this.authenticatedDevice = authenticatedDevice;
     }
@@ -43,7 +42,7 @@ public class MqttCommandContext {
      * @return The context.
      * @throws NullPointerException if any of the parameters is {@code null}.
      */
-    public static MqttCommandContext fromAmqpMessage(final Message message, final Device authenticatedDevice) {
+    public static MqttCommandContext fromAmqpMessage(final Message message, final DeviceInfo authenticatedDevice) {
         Objects.requireNonNull(message);
         Objects.requireNonNull(authenticatedDevice);
 
@@ -55,7 +54,7 @@ public class MqttCommandContext {
      *
      * @return The authenticated device.
      */
-    public Device getDevice() {
+    public DeviceInfo getDevice() {
         return authenticatedDevice;
     }
 

@@ -15,8 +15,6 @@ package org.eclipse.hono.gateway.sdk.mqtt2amqp;
 
 import java.util.Objects;
 
-import org.eclipse.hono.auth.Device;
-
 import io.netty.handler.codec.mqtt.MqttQoS;
 import io.vertx.mqtt.MqttEndpoint;
 import io.vertx.mqtt.messages.MqttPublishMessage;
@@ -29,11 +27,11 @@ public class MqttDownstreamContext {
 
     private final MqttPublishMessage message;
     private final MqttEndpoint deviceEndpoint;
-    private final Device authenticatedDevice;
+    private final DeviceInfo authenticatedDevice;
     private final String topic;
     private final MqttQoS qos;
 
-    private MqttDownstreamContext(final Device authenticatedDevice, final MqttPublishMessage publishedMessage,
+    private MqttDownstreamContext(final DeviceInfo authenticatedDevice, final MqttPublishMessage publishedMessage,
             final MqttEndpoint deviceEndpoint, final String topic) {
         this.authenticatedDevice = authenticatedDevice;
         this.message = publishedMessage;
@@ -54,7 +52,7 @@ public class MqttDownstreamContext {
     public static MqttDownstreamContext fromPublishPacket(
             final MqttPublishMessage message,
             final MqttEndpoint deviceEndpoint,
-            final Device authenticatedDevice) {
+            final DeviceInfo authenticatedDevice) {
 
         Objects.requireNonNull(message);
         Objects.requireNonNull(deviceEndpoint);
@@ -86,7 +84,7 @@ public class MqttDownstreamContext {
      *
      * @return The identity or {@code null} if the device has not been authenticated.
      */
-    public Device authenticatedDevice() {
+    public DeviceInfo authenticatedDevice() {
         return authenticatedDevice;
     }
 

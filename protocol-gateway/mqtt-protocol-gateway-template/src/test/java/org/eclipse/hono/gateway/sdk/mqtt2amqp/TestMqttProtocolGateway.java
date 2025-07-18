@@ -16,7 +16,6 @@ package org.eclipse.hono.gateway.sdk.mqtt2amqp;
 import java.security.cert.X509Certificate;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.eclipse.hono.auth.Device;
 import org.eclipse.hono.client.amqp.config.ClientConfigProperties;
 import org.eclipse.hono.gateway.sdk.mqtt2amqp.downstream.DownstreamMessage;
 import org.eclipse.hono.gateway.sdk.mqtt2amqp.downstream.EventMessage;
@@ -36,7 +35,7 @@ class TestMqttProtocolGateway extends AbstractMqttProtocolGateway {
     public static final String DEVICE_PASSWORD = "device-password";
     public static final String TENANT_ID = "the-tenant";
     public static final String DEVICE_ID = "the-device-id";
-    public static final Device DEVICE = new Device(TENANT_ID, DEVICE_ID);
+    public static final DeviceInfo DEVICE = new DeviceInfo(TENANT_ID, DEVICE_ID);
 
     public static final String GW_USERNAME = "gw@tenant2";
     public static final String GW_PASSWORD = "gw-secret";
@@ -109,7 +108,7 @@ class TestMqttProtocolGateway extends AbstractMqttProtocolGateway {
     }
 
     @Override
-    protected Future<Device> authenticateDevice(final String username, final String password,
+    protected Future<DeviceInfo> authenticateDevice(final String username, final String password,
             final String clientId) {
         if (DEVICE_USERNAME.equals(username) && DEVICE_PASSWORD.equals(password)) {
             return Future.succeededFuture(DEVICE);
@@ -152,7 +151,7 @@ class TestMqttProtocolGateway extends AbstractMqttProtocolGateway {
     }
 
     @Override
-    protected Future<Device> authenticateClientCertificate(final X509Certificate deviceCertificate) {
+    protected Future<DeviceInfo> authenticateClientCertificate(final X509Certificate deviceCertificate) {
         return Future.succeededFuture(DEVICE);
     }
 
