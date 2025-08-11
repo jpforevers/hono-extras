@@ -628,8 +628,8 @@ public class AbstractMqttProtocolGatewayTest {
                 new MqttProtocolGatewayConfig(), vertx, tenantConnectionManager) {
 
             @Override
-            protected Future<DownstreamMessage> onPublishedMessage(final MqttDownstreamContext ctx) {
-                return Future.succeededFuture(new TelemetryMessage(ctx.message().payload(), QoS.AT_MOST_ONCE));
+            protected Future<List<DownstreamMessage>> onPublishedMessage(final MqttDownstreamContext ctx) {
+                return Future.succeededFuture(List.of(new TelemetryMessage(ctx.message().payload(), QoS.AT_MOST_ONCE)));
             }
         };
 
@@ -665,9 +665,8 @@ public class AbstractMqttProtocolGatewayTest {
                 new MqttProtocolGatewayConfig(), vertx, tenantConnectionManager) {
 
             @Override
-            protected Future<DownstreamMessage> onPublishedMessage(final MqttDownstreamContext ctx) {
-                return Future.succeededFuture(
-                        new CommandResponseMessage(replyId, correlationId, status.toString(), ctx.message().payload()));
+            protected Future<List<DownstreamMessage>> onPublishedMessage(final MqttDownstreamContext ctx) {
+                return Future.succeededFuture(List.of(new CommandResponseMessage(replyId, correlationId, status.toString(), ctx.message().payload())));
             }
         };
 

@@ -14,6 +14,7 @@
 package org.eclipse.hono.gateway.sdk.mqtt2amqp;
 
 import java.security.cert.X509Certificate;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.hono.client.amqp.config.ClientConfigProperties;
@@ -124,12 +125,12 @@ class TestMqttProtocolGateway extends AbstractMqttProtocolGateway {
     }
 
     @Override
-    protected Future<DownstreamMessage> onPublishedMessage(final MqttDownstreamContext ctx) {
+    protected Future<List<DownstreamMessage>> onPublishedMessage(final MqttDownstreamContext ctx) {
         final EventMessage message = new EventMessage(ctx.message().payload());
         message.addApplicationProperty(KEY_APPLICATION_PROPERTY_TOPIC, ctx.topic());
         message.setContentType(CONTENT_TYPE);
 
-        return Future.succeededFuture(message);
+        return Future.succeededFuture(List.of(message));
     }
 
     @Override

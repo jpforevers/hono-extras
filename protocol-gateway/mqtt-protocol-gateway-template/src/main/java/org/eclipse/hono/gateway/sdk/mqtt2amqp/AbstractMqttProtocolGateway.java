@@ -167,7 +167,7 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
      *         never {@code null}. If the failure has been caused by the device that published the message, the (failed)
      *         future contains a {@link ClientErrorException}.
      */
-    protected abstract Future<DownstreamMessage> onPublishedMessage(MqttDownstreamContext ctx);
+    protected abstract Future<List<DownstreamMessage>> onPublishedMessage(MqttDownstreamContext ctx);
 
     /**
      * This method is called when a command message that has been received from Hono. It prepares the data to be
@@ -521,7 +521,13 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
         Objects.requireNonNull(ctx);
 
         onPublishedMessage(ctx)
-                .compose(downstreamMessage -> uploadMessage(downstreamMessage, ctx))
+                .compose(downstreamMessages -> {
+                    List<Future> futures = new ArrayList<>();
+                    for (DownstreamMessage downstreamMessage : downstreamMessages) {
+                        futures.add(uploadMessage(downstreamMessage, ctx));
+                    }
+                    return CompositeFuture.all(futures);
+                })
                 .onComplete(processing -> {
                     if (processing.succeeded()) {
                         onUploadSuccess(ctx);
