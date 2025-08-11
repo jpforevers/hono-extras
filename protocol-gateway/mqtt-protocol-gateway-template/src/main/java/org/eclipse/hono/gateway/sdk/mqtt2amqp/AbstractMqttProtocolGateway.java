@@ -124,10 +124,6 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
             final MqttProtocolGatewayConfig mqttGatewayConfig,
             final MultiTenantConnectionManager tenantConnectionManager) {
 
-        Objects.requireNonNull(amqpClientConfig);
-        Objects.requireNonNull(mqttGatewayConfig);
-        Objects.requireNonNull(tenantConnectionManager);
-
         this.amqpClientConfig = amqpClientConfig;
         this.mqttGatewayConfig = mqttGatewayConfig;
         this.tenantConnectionManager = tenantConnectionManager;
