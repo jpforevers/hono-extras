@@ -86,6 +86,11 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
 
     private MqttServer server;
 
+
+    public MultiTenantConnectionManager getTenantConnectionManager() {
+        return tenantConnectionManager;
+    }
+
     /**
      * Creates an instance.
      * <p>

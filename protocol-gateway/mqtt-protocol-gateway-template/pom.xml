@@ -18,7 +18,7 @@
 
     <groupId>org.eclipse.hono</groupId>
     <artifactId>hono-mqtt-protocol-gateway</artifactId>
-    <version>0.0.2</version>
+    <version>0.0.3</version>
 
     <name>Hono MQTT Protocol Gateway Template</name>
     <description>A template for MQTT protocol gateways for Hono.</description>
