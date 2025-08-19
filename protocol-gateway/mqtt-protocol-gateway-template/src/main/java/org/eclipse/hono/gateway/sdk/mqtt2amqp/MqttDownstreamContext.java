@@ -75,7 +75,7 @@ public class MqttDownstreamContext {
      *
      * @return The endpoint.
      */
-    MqttEndpoint deviceEndpoint() {
+    public MqttEndpoint deviceEndpoint() {
         return deviceEndpoint;
     }
 

@@ -755,7 +755,8 @@ public abstract class AbstractMqttProtocolGateway extends AbstractVerticle {
         final Command command = onCommandReceived(ctx);
 
         if (command == null) {
-            throw new IllegalStateException("onCommandReceived returned null");
+            return;
+//            throw new IllegalStateException("onCommandReceived returned null");
         }
 
         final CommandSubscription subscription = cmdSubscriptionsManager.getSubscriptions()
